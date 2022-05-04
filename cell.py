@@ -1,4 +1,5 @@
 from tkmacosx import Button  # For MacOS
+from tkinter import Label
 import random
 import settings
 import utils
@@ -6,9 +7,12 @@ import utils
 
 class Cell:
     all = []
+    cell_count = settings.CELL_COUNT
+    cell_count_label_object = None
 
     def __init__(self, x, y, is_mine=False):
         self.is_mine = is_mine
+        self.is_opened = False
         self.cell_btn_object = None
         self.x = x
         self.y = y
@@ -23,12 +27,22 @@ class Cell:
         btn.bind("<Button-2>", self.right_click_actions)  # Right click
         self.cell_btn_object = btn
 
+    @staticmethod
+    def create_cell_count_label(location):
+        lbl = Label(location, text=f"Cells Left: {Cell.cell_count}", bg="black", fg="white", font=("", 30),
+                    width=12, height=4)
+        Cell.cell_count_label_object = lbl
+
     def left_click_actions(self, event):
         # print(event)
         # print("I am left clicked")
         if self.is_mine:
             self.show_mine()
         else:
+            if self.surrounded_cells_mines_length == 0:
+                for cell_obj in self.surrounded_cells:
+                    cell_obj.show_cell()
+
             self.show_cell()
 
     def get_cell_by_axis(self, x, y):
@@ -62,7 +76,16 @@ class Cell:
         return counter
 
     def show_cell(self):
+        if not self.is_opened:
+            Cell.cell_count -= 1
         self.cell_btn_object.configure(text=self.surrounded_cells_mines_length)
+
+        # Replace the text of cell count label with the newer count
+        if Cell.cell_count_label_object:
+            Cell.cell_count_label_object.configure(text=f"Cells Left: {Cell.cell_count}")
+
+        # Mark the cell as opened (Use is as the last line of this method)
+        self.is_opened = True
 
     def show_mine(self):
         # A logic to interrupt the game and display a message that player lost!
